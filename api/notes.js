@@ -1,5 +1,4 @@
-// api/notes.js - Vercel Serverless Function
-// 用一个固定 key 存所有笔记（个人使用，单用户）
+// api/notes.js - Vercel Serverless Function (Upstash Redis)
 
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -7,34 +6,31 @@ export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
   if (req.method === 'OPTIONS') return res.status(200).end();
 
-  const KV_URL      = process.env.KV_REST_API_URL;
-  const KV_TOKEN    = process.env.KV_REST_API_TOKEN;
+  const REDIS_URL   = process.env.UPSTASH_REDIS_REST_URL;
+  const REDIS_TOKEN = process.env.UPSTASH_REDIS_REST_TOKEN;
 
-  if (!KV_URL || !KV_TOKEN) {
-    return res.status(500).json({ error: 'KV 未配置，请在 Vercel 项目里添加 KV 数据库' });
+  if (!REDIS_URL || !REDIS_TOKEN) {
+    return res.status(500).json({ error: '环境变量未配置' });
   }
 
-  const kvFetch = (path, options = {}) =>
-    fetch(`${KV_URL}${path}`, {
-      ...options,
-      headers: { Authorization: `Bearer ${KV_TOKEN}`, 'Content-Type': 'application/json', ...(options.headers || {}) },
+  const redisFetch = (cmd) =>
+    fetch(`${REDIS_URL}/${cmd}`, {
+      headers: { Authorization: `Bearer ${REDIS_TOKEN}` },
     }).then(r => r.json());
 
-  // GET /api/notes — 读取所有笔记
+  // GET — 读取笔记
   if (req.method === 'GET') {
-    const data = await kvFetch('/get/memoai_notes');
+    const data = await redisFetch('get/memoai_notes');
     const notes = data.result ? JSON.parse(data.result) : [];
     return res.status(200).json({ notes });
   }
 
-  // POST /api/notes — 保存所有笔记
+  // POST — 保存笔记
   if (req.method === 'POST') {
     const { notes } = req.body;
     if (!Array.isArray(notes)) return res.status(400).json({ error: '格式错误' });
-    await kvFetch('/set/memoai_notes', {
-      method: 'POST',
-      body: JSON.stringify(JSON.stringify(notes)),
-    });
+    const encoded = encodeURIComponent(JSON.stringify(notes));
+    await redisFetch(`set/memoai_notes/${encoded}`);
     return res.status(200).json({ ok: true });
   }
 
