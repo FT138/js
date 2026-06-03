@@ -122,39 +122,10 @@
   .toast{position:fixed;top:24px;left:50%;transform:translateX(-50%);background:#4ade80;color:#000;padding:8px 20px;border-radius:10px;font-size:13px;font-weight:600;z-index:999;opacity:0;transition:opacity .3s}
   .toast.show{opacity:1}
 
-  .apikey-screen{position:fixed;inset:0;background:var(--bg);z-index:500;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:32px 24px}
-  .apikey-logo{font-size:48px;margin-bottom:16px}
-  .apikey-title{font-size:22px;font-weight:700;margin-bottom:8px;text-align:center}
-  .apikey-desc{font-size:14px;color:var(--text2);text-align:center;line-height:1.7;margin-bottom:28px}
-  .apikey-input-wrap{width:100%;max-width:400px;position:relative;margin-bottom:12px}
-  .apikey-input-wrap input{width:100%;background:var(--surface2);border:1px solid #ffffff15;border-radius:12px;padding:14px 46px 14px 16px;color:var(--text);font-size:14px;outline:none;font-family:monospace;letter-spacing:.3px;transition:border .2s}
-  .apikey-input-wrap input:focus{border-color:#7c6af760}
-  .apikey-eye{position:absolute;right:14px;top:50%;transform:translateY(-50%);background:none;border:none;color:var(--text3);cursor:pointer;font-size:18px;padding:4px}
-  .apikey-hint{font-size:12px;color:var(--text3);text-align:center;margin-bottom:24px;line-height:1.6}
-  .apikey-hint a{color:var(--accent2);text-decoration:none}
-  .apikey-btn{width:100%;max-width:400px;padding:15px;border-radius:12px;border:none;font-size:15px;font-weight:600;cursor:pointer;background:var(--accent);color:#fff;transition:all .2s}
-  .apikey-btn:hover{background:var(--accent2)}
-  .apikey-skip{margin-top:12px;font-size:13px;color:var(--text3);cursor:pointer;text-decoration:underline}
+
 </style>
 </head>
 <body>
-
-<!-- API Key Screen -->
-<div class="apikey-screen" id="apikeyScreen" style="display:none">
-  <div class="apikey-logo">🤖</div>
-  <div class="apikey-title">设置 API Key</div>
-  <div class="apikey-desc">MemoAI 使用 Claude AI 自动分类笔记、识别账号密码。<br>请填入你的 Anthropic API Key 以启用 AI 功能。</div>
-  <div class="apikey-input-wrap">
-    <input type="password" id="apikeyInput" placeholder="sk-ant-api03-..." autocomplete="off" autocorrect="off" spellcheck="false">
-    <button class="apikey-eye" onclick="toggleApiKeyVis()" id="apiEyeBtn">👁</button>
-  </div>
-  <div class="apikey-hint">
-    在 <a href="https://console.anthropic.com/keys" target="_blank">console.anthropic.com/keys</a> 获取 Key<br>
-    Key 仅保存在你的设备本地，不会上传
-  </div>
-  <button class="apikey-btn" onclick="saveApiKey()">保存并开始使用</button>
-  <div class="apikey-skip" onclick="skipApiKey()">暂不设置，使用基础模式</div>
-</div>
 
 <div id="app">
   <div id="list-view">
@@ -165,7 +136,7 @@
           <div id="syncDot" title="同步状态" style="width:8px;height:8px;border-radius:50%;background:var(--text3);transition:background .3s;cursor:default"></div>
         </div>
         <button class="icon-btn" onclick="showStats()">📊</button>
-        <button class="icon-btn" onclick="openApiKeySetting()" title="API 设置" id="keyBtn">🔑</button>
+
       </div>
     </div>
 
@@ -206,7 +177,7 @@
   <div class="modal">
     <div class="modal-handle"></div>
     <div class="modal-title" id="modalTitle">新建笔记</div>
-    <div class="ai-status" id="aiStatus" style="display:none">
+    <div class="ai-status" id="aiStatus" style="display:none;display:none">
       <div class="ai-dot"></div>
       <span id="aiStatusText">AI 正在分析内容...</span>
     </div>
@@ -228,7 +199,7 @@
         <option value="health">❤️ 健康记录</option>
       </select>
     </div>
-    <button class="btn btn-primary" onclick="analyzeAndSave()">🤖 AI 分析并保存</button>
+    <button class="btn btn-primary" onclick="analyzeAndSave()">✓ 保存笔记</button>
     <button class="btn btn-secondary" onclick="closeModal('newModal')">取消</button>
   </div>
 </div>
@@ -289,55 +260,14 @@ let voiceTranscript = '';
 let photoBase64 = '';
 let editingId = null;
 
-function getApiKey(){return localStorage.getItem('memoai_apikey')||'';}
-
-function checkApiKey(){
-  if(!getApiKey()){
-    document.getElementById('apikeyScreen').style.display='flex';
-  }
-}
-
-function toggleApiKeyVis(){
-  const inp=document.getElementById('apikeyInput');
-  const btn=document.getElementById('apiEyeBtn');
-  if(inp.type==='password'){inp.type='text';btn.textContent='🙈';}
-  else{inp.type='password';btn.textContent='👁';}
-}
-
-async function saveApiKey(){
-  const val=document.getElementById('apikeyInput').value.trim();
-  if(!val || val.length < 20){alert('请粘贴完整的 API Key');return;}
-  const btn=document.querySelector('.apikey-btn');
-  btn.textContent='验证中...';btn.disabled=true;
-  try{
-    const resp=await fetch('https://api.anthropic.com/v1/messages',{
-      method:'POST',
-      headers:{'Content-Type':'application/json','x-api-key':val,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
-      body:JSON.stringify({model:'claude-haiku-4-5-20251001',max_tokens:10,messages:[{role:'user',content:'hi'}]})
-    });
-    if(resp.status===401){
-      alert('API Key 无效，请检查是否复制完整');
-      btn.textContent='保存并开始使用';btn.disabled=false;return;
-    }
-  }catch(e){}
-  localStorage.setItem('memoai_apikey',val);
-  document.getElementById('apikeyScreen').style.display='none';
-  document.getElementById('keyBtn').style.background='#4ade8020';
-  toast('✓ API Key 已保存，AI 功能已启用');
-  btn.textContent='保存并开始使用';btn.disabled=false;
-}
-
-function skipApiKey(){
-  document.getElementById('apikeyScreen').style.display='none';
-  toast('已进入基础模式，分类需手动选择');
-}
-
-function openApiKeySetting(){
-  const cur=getApiKey();
-  document.getElementById('apikeyInput').value=cur?cur:'';
-  document.getElementById('apikeyInput').type='password';
-  document.getElementById('apiEyeBtn').textContent='👁';
-  document.getElementById('apikeyScreen').style.display='flex';
+// 关键词自动分类
+function autoClassify(text){
+  const t = text.toLowerCase();
+  if(/密码|账号|登录|注册|用户名|邮箱|username|password|email|账户/.test(t)) return 'account';
+  if(/元|钱|转账|报销|收入|花费|消费|支出|工资|余额|付款|费用|￥|rmb/.test(t)) return 'finance';
+  if(/待办|任务|记得|提醒|计划|todo|需要|要做|别忘|截止|deadline/.test(t)) return 'todo';
+  if(/跑步|睡眠|体重|医院|药|健身|运动|血压|心率|卡路里|饮食|锻炼/.test(t)) return 'health';
+  return 'general';
 }
 
 const CATEGORIES = {
@@ -511,69 +441,42 @@ function openNew(){
   openModal('newModal');
 }
 
-async function analyzeAndSave(){
+function analyzeAndSave(){
   const title=document.getElementById('noteTitle').value.trim();
   const body=document.getElementById('noteBody').value.trim();
   if(!title&&!body){alert('请输入标题或内容');return;}
 
-  const aiStatus=document.getElementById('aiStatus');
-  const aiStatusText=document.getElementById('aiStatusText');
-  aiStatus.style.display='flex';
-  aiStatusText.textContent='AI 正在分析内容...';
+  const combined = title + ' ' + body;
+  const category = document.getElementById('noteCat').value !== 'general'
+    ? document.getElementById('noteCat').value
+    : autoClassify(combined);
 
-  try{
-    const prompt=`分析以下笔记内容，提取关键信息。严格按JSON返回，不要任何其他文字：
-内容："${title} ${body}"
+  // 提取账号密码
+  let account='', password='';
+  const accMatch = combined.match(/账号[:：\s]+(\S+)/);
+  const pwdMatch = combined.match(/密码[:：\s]+(\S+)/);
+  const emailMatch = combined.match(/([a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,})/);
+  if(accMatch) account = accMatch[1];
+  else if(emailMatch) account = emailMatch[1];
+  if(pwdMatch) password = pwdMatch[1];
 
-返回格式：
-{"category":"account|finance|todo|health|general","title":"建议标题","summary":"内容摘要","account":"账号（如有）","password":"密码（如有）","tags":["标签1","标签2"]}
+  const newNote={
+    id:editingId||Date.now(),
+    title:title||body.slice(0,20),
+    category,
+    body,
+    time:new Date().toLocaleString('zh-CN',{month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'}).replace(/\//g,'-'),
+    account,
+    password,
+    tags:[]
+  };
 
-规则：
-- 含账号/密码/登录信息 → account
-- 含金额/花费/收入/报销 → finance
-- 含待办/任务/计划/提醒 → todo
-- 含健康/运动/医疗/睡眠 → health
-- 其他 → general
-- account/password 没有就返回空字符串
-- tags 最多3个`;
-
-    const resp=await fetch('https://api.anthropic.com/v1/messages',{
-      method:'POST',
-      headers:{'Content-Type':'application/json','x-api-key':getApiKey(),'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
-      body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:500,messages:[{role:'user',content:prompt}]})
-    });
-    const data=await resp.json();
-    const clean=data.content[0].text.replace(/```json|```/g,'').trim();
-    const result=JSON.parse(clean);
-    aiStatusText.textContent='AI 分析完成 ✓';
-
-    const newNote={
-      id:editingId||Date.now(),
-      title:result.title||title,
-      category:result.category||document.getElementById('noteCat').value,
-      body:result.summary||body,
-      time:new Date().toLocaleString('zh-CN',{month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'}).replace(/\//g,'-'),
-      account:result.account||'',
-      password:result.password||'',
-      tags:result.tags||[]
-    };
-
-    if(editingId){notes=notes.map(n=>n.id===editingId?newNote:n);}
-    else{notes.unshift(newNote);}
-    save();
-    setTimeout(()=>{closeModal('newModal');renderNotes();aiStatus.style.display='none';},600);
-  }catch(e){
-    aiStatusText.textContent='已保存（离线模式）';
-    const bodyText=body;
-    let account='',password='';
-    const accMatch=bodyText.match(/账号[:：]\s*(\S+)/);
-    const pwdMatch=bodyText.match(/密码[:：]\s*(\S+)/);
-    if(accMatch)account=accMatch[1];
-    if(pwdMatch)password=pwdMatch[1];
-    notes.unshift({id:Date.now(),title:title||'新笔记',category:document.getElementById('noteCat').value,body,time:new Date().toLocaleString('zh-CN',{month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'}).replace(/\//g,'-'),account,password,tags:[]});
-    save();
-    setTimeout(()=>{closeModal('newModal');renderNotes();aiStatus.style.display='none';},600);
-  }
+  if(editingId){notes=notes.map(n=>n.id===editingId?newNote:n);}
+  else{notes.unshift(newNote);}
+  save();
+  closeModal('newModal');
+  renderNotes();
+  toast('✓ 已保存');
 }
 
 function openVoice(){
@@ -626,29 +529,22 @@ function stopVoice(){
   }
 }
 
-async function processVoice(text){
-  const aiStatus=document.getElementById('voiceAiStatus');
-  const aiText=document.getElementById('voiceAiText');
-  aiStatus.style.display='flex';
-  aiText.textContent='AI 正在理解语音内容...';
-  try{
-    const prompt=`将语音转文字整理成结构化笔记，严格返回JSON，无其他文字：
-语音内容："${text}"
-返回：{"category":"account|finance|todo|health|general","title":"简洁标题","body":"整理后的内容","account":"账号（如有）","password":"密码（如有）","tags":["标签"]}`;
-    const resp=await fetch('https://api.anthropic.com/v1/messages',{
-      method:'POST',
-      headers:{'Content-Type':'application/json','x-api-key':getApiKey(),'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
-      body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:400,messages:[{role:'user',content:prompt}]})
-    });
-    const data=await resp.json();
-    const clean=data.content[0].text.replace(/```json|```/g,'').trim();
-    const result=JSON.parse(clean);
-    aiText.textContent='AI 分析完成，点击保存 ✓';
-    document.getElementById('voiceText').dataset.result=JSON.stringify(result);
-    document.getElementById('voiceText').textContent=result.body;
-  }catch(e){
-    aiText.textContent='已记录原始语音内容';
-  }
+function processVoice(text){
+  const category = autoClassify(text);
+  const accMatch = text.match(/账号[:：\s]+(\S+)/);
+  const pwdMatch = text.match(/密码[:：\s]+(\S+)/);
+  const emailMatch = text.match(/([a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,})/);
+  const result = {
+    category,
+    title: text.slice(0,20),
+    body: text,
+    account: accMatch?accMatch[1]:(emailMatch?emailMatch[1]:''),
+    password: pwdMatch?pwdMatch[1]:'',
+    tags:['语音']
+  };
+  document.getElementById('voiceAiStatus').style.display='flex';
+  document.getElementById('voiceAiText').textContent='识别完成，点击保存 ✓';
+  document.getElementById('voiceText').dataset.result=JSON.stringify(result);
 }
 
 function saveVoiceNote(){
@@ -682,30 +578,11 @@ function handlePhoto(input){
     const aiText=document.getElementById('photoAiText');
     aiStatus.style.display='flex';
     aiText.textContent='AI 正在识别图片内容...';
-    try{
-      const prompt=`识别这张图片中的所有文字和关键信息，特别注意账号、密码、用户名、邮箱、金额、日期、联系方式等敏感信息。
-以JSON返回：{"category":"account|finance|todo|health|general","title":"内容标题","body":"完整识别内容","account":"账号（如有）","password":"密码（如有）","tags":["标签"]}
-严格只返回JSON，不要其他文字。`;
-      const resp=await fetch('https://api.anthropic.com/v1/messages',{
-        method:'POST',
-        headers:{'Content-Type':'application/json','x-api-key':getApiKey(),'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
-        body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:600,messages:[{role:'user',content:[{type:'image',source:{type:'base64',media_type:file.type,data:photoBase64}},{type:'text',text:prompt}]}]})
-      });
-      const data=await resp.json();
-      const clean=data.content[0].text.replace(/```json|```/g,'').trim();
-      const result=JSON.parse(clean);
-      aiText.textContent='识别完成 ✓';
-      document.getElementById('photoResultText').value=result.body;
-      document.getElementById('photoResult').style.display='block';
-      document.getElementById('photoSaveBtn').style.display='block';
-      document.getElementById('photoSaveBtn').dataset.result=JSON.stringify(result);
-    }catch(e){
-      aiText.textContent='识别完成，请手动编辑';
-      document.getElementById('photoResultText').value='请手动输入识别内容';
+    aiText.textContent='图片已加载，请在下方填写内容';
+      document.getElementById('photoResultText').value='';
       document.getElementById('photoResult').style.display='block';
       document.getElementById('photoSaveBtn').style.display='block';
       document.getElementById('photoSaveBtn').dataset.result='';
-    }
   };
   reader.readAsDataURL(file);
 }
@@ -730,8 +607,6 @@ document.querySelectorAll('.modal-bg').forEach(bg=>{
   bg.addEventListener('click',e=>{if(e.target===bg)bg.classList.remove('show');});
 });
 
-checkApiKey();
-if(getApiKey()) document.getElementById('keyBtn').style.background='#4ade8020';
 loadFromCloud();
 </script>
 </body>
