@@ -121,16 +121,51 @@
 
   .toast{position:fixed;top:24px;left:50%;transform:translateX(-50%);background:#4ade80;color:#000;padding:8px 20px;border-radius:10px;font-size:13px;font-weight:600;z-index:999;opacity:0;transition:opacity .3s}
   .toast.show{opacity:1}
+
+  .apikey-screen{position:fixed;inset:0;background:var(--bg);z-index:500;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:32px 24px}
+  .apikey-logo{font-size:48px;margin-bottom:16px}
+  .apikey-title{font-size:22px;font-weight:700;margin-bottom:8px;text-align:center}
+  .apikey-desc{font-size:14px;color:var(--text2);text-align:center;line-height:1.7;margin-bottom:28px}
+  .apikey-input-wrap{width:100%;max-width:400px;position:relative;margin-bottom:12px}
+  .apikey-input-wrap input{width:100%;background:var(--surface2);border:1px solid #ffffff15;border-radius:12px;padding:14px 46px 14px 16px;color:var(--text);font-size:14px;outline:none;font-family:monospace;letter-spacing:.3px;transition:border .2s}
+  .apikey-input-wrap input:focus{border-color:#7c6af760}
+  .apikey-eye{position:absolute;right:14px;top:50%;transform:translateY(-50%);background:none;border:none;color:var(--text3);cursor:pointer;font-size:18px;padding:4px}
+  .apikey-hint{font-size:12px;color:var(--text3);text-align:center;margin-bottom:24px;line-height:1.6}
+  .apikey-hint a{color:var(--accent2);text-decoration:none}
+  .apikey-btn{width:100%;max-width:400px;padding:15px;border-radius:12px;border:none;font-size:15px;font-weight:600;cursor:pointer;background:var(--accent);color:#fff;transition:all .2s}
+  .apikey-btn:hover{background:var(--accent2)}
+  .apikey-skip{margin-top:12px;font-size:13px;color:var(--text3);cursor:pointer;text-decoration:underline}
 </style>
 </head>
 <body>
+
+<!-- API Key Screen -->
+<div class="apikey-screen" id="apikeyScreen" style="display:none">
+  <div class="apikey-logo">🤖</div>
+  <div class="apikey-title">设置 API Key</div>
+  <div class="apikey-desc">MemoAI 使用 Claude AI 自动分类笔记、识别账号密码。<br>请填入你的 Anthropic API Key 以启用 AI 功能。</div>
+  <div class="apikey-input-wrap">
+    <input type="password" id="apikeyInput" placeholder="sk-ant-api03-..." autocomplete="off" autocorrect="off" spellcheck="false">
+    <button class="apikey-eye" onclick="toggleApiKeyVis()" id="apiEyeBtn">👁</button>
+  </div>
+  <div class="apikey-hint">
+    在 <a href="https://console.anthropic.com/keys" target="_blank">console.anthropic.com/keys</a> 获取 Key<br>
+    Key 仅保存在你的设备本地，不会上传
+  </div>
+  <button class="apikey-btn" onclick="saveApiKey()">保存并开始使用</button>
+  <div class="apikey-skip" onclick="skipApiKey()">暂不设置，使用基础模式</div>
+</div>
 
 <div id="app">
   <div id="list-view">
     <div class="header">
       <div class="logo">Memo<span>AI</span></div>
       <div class="header-actions">
+        <div style="display:flex;align-items:center;gap:6px;padding:0 4px">
+          <div id="syncDot" title="同步状态" style="width:8px;height:8px;border-radius:50%;background:var(--text3);transition:background .3s;cursor:default"></div>
+        </div>
         <button class="icon-btn" onclick="showStats()">📊</button>
+        <button class="icon-btn" onclick="openApiKeySetting()" title="API 设置" id="keyBtn">🔑</button>
       </div>
     </div>
 
@@ -254,6 +289,57 @@ let voiceTranscript = '';
 let photoBase64 = '';
 let editingId = null;
 
+function getApiKey(){return localStorage.getItem('memoai_apikey')||'';}
+
+function checkApiKey(){
+  if(!getApiKey()){
+    document.getElementById('apikeyScreen').style.display='flex';
+  }
+}
+
+function toggleApiKeyVis(){
+  const inp=document.getElementById('apikeyInput');
+  const btn=document.getElementById('apiEyeBtn');
+  if(inp.type==='password'){inp.type='text';btn.textContent='🙈';}
+  else{inp.type='password';btn.textContent='👁';}
+}
+
+async function saveApiKey(){
+  const val=document.getElementById('apikeyInput').value.trim();
+  if(!val || val.length < 20){alert('请粘贴完整的 API Key');return;}
+  const btn=document.querySelector('.apikey-btn');
+  btn.textContent='验证中...';btn.disabled=true;
+  try{
+    const resp=await fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST',
+      headers:{'Content-Type':'application/json','x-api-key':val,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
+      body:JSON.stringify({model:'claude-haiku-4-5-20251001',max_tokens:10,messages:[{role:'user',content:'hi'}]})
+    });
+    if(resp.status===401){
+      alert('API Key 无效，请检查是否复制完整');
+      btn.textContent='保存并开始使用';btn.disabled=false;return;
+    }
+  }catch(e){}
+  localStorage.setItem('memoai_apikey',val);
+  document.getElementById('apikeyScreen').style.display='none';
+  document.getElementById('keyBtn').style.background='#4ade8020';
+  toast('✓ API Key 已保存，AI 功能已启用');
+  btn.textContent='保存并开始使用';btn.disabled=false;
+}
+
+function skipApiKey(){
+  document.getElementById('apikeyScreen').style.display='none';
+  toast('已进入基础模式，分类需手动选择');
+}
+
+function openApiKeySetting(){
+  const cur=getApiKey();
+  document.getElementById('apikeyInput').value=cur?cur:'';
+  document.getElementById('apikeyInput').type='password';
+  document.getElementById('apiEyeBtn').textContent='👁';
+  document.getElementById('apikeyScreen').style.display='flex';
+}
+
 const CATEGORIES = {
   account:{label:'账号密码',color:'cat-account',emoji:'🔐'},
   finance:{label:'财务',color:'cat-finance',emoji:'💰'},
@@ -271,7 +357,57 @@ if(!notes.length){
   save();
 }
 
-function save(){localStorage.setItem('memoai_notes',JSON.stringify(notes))}
+// ── 云端同步 ──────────────────────────────
+let syncTimer = null;
+let isSyncing = false;
+
+function save(){
+  localStorage.setItem('memoai_notes', JSON.stringify(notes));
+  // 防抖：1.5秒内多次操作只同步一次
+  clearTimeout(syncTimer);
+  syncTimer = setTimeout(syncToCloud, 1500);
+}
+
+async function syncToCloud(){
+  if(isSyncing) return;
+  isSyncing = true;
+  setSyncStatus('syncing');
+  try{
+    const resp = await fetch('/api/notes', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({notes})
+    });
+    if(resp.ok){ setSyncStatus('ok'); }
+    else { setSyncStatus('err'); }
+  }catch(e){ setSyncStatus('err'); }
+  isSyncing = false;
+}
+
+async function loadFromCloud(){
+  setSyncStatus('syncing');
+  try{
+    const resp = await fetch('/api/notes');
+    if(!resp.ok) throw new Error();
+    const data = await resp.json();
+    if(data.notes && data.notes.length > 0){
+      // 云端有数据则用云端，否则保留本地
+      notes = data.notes;
+      localStorage.setItem('memoai_notes', JSON.stringify(notes));
+    }
+    setSyncStatus('ok');
+  }catch(e){
+    setSyncStatus('err');
+  }
+  renderNotes();
+}
+
+function setSyncStatus(state){
+  const el = document.getElementById('syncDot');
+  if(!el) return;
+  el.title = state==='ok'?'已同步':state==='syncing'?'同步中...':'同步失败，使用本地数据';
+  el.style.background = state==='ok'?'var(--green)':state==='syncing'?'var(--amber)':'var(--red)';
+}
 
 function toast(msg){
   const el=document.getElementById('toast');
@@ -403,7 +539,7 @@ async function analyzeAndSave(){
 
     const resp=await fetch('https://api.anthropic.com/v1/messages',{
       method:'POST',
-      headers:{'Content-Type':'application/json'},
+      headers:{'Content-Type':'application/json','x-api-key':getApiKey(),'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
       body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:500,messages:[{role:'user',content:prompt}]})
     });
     const data=await resp.json();
@@ -501,7 +637,7 @@ async function processVoice(text){
 返回：{"category":"account|finance|todo|health|general","title":"简洁标题","body":"整理后的内容","account":"账号（如有）","password":"密码（如有）","tags":["标签"]}`;
     const resp=await fetch('https://api.anthropic.com/v1/messages',{
       method:'POST',
-      headers:{'Content-Type':'application/json'},
+      headers:{'Content-Type':'application/json','x-api-key':getApiKey(),'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
       body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:400,messages:[{role:'user',content:prompt}]})
     });
     const data=await resp.json();
@@ -552,7 +688,7 @@ function handlePhoto(input){
 严格只返回JSON，不要其他文字。`;
       const resp=await fetch('https://api.anthropic.com/v1/messages',{
         method:'POST',
-        headers:{'Content-Type':'application/json'},
+        headers:{'Content-Type':'application/json','x-api-key':getApiKey(),'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
         body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:600,messages:[{role:'user',content:[{type:'image',source:{type:'base64',media_type:file.type,data:photoBase64}},{type:'text',text:prompt}]}]})
       });
       const data=await resp.json();
@@ -594,7 +730,9 @@ document.querySelectorAll('.modal-bg').forEach(bg=>{
   bg.addEventListener('click',e=>{if(e.target===bg)bg.classList.remove('show');});
 });
 
-renderNotes();
+checkApiKey();
+if(getApiKey()) document.getElementById('keyBtn').style.background='#4ade8020';
+loadFromCloud();
 </script>
 </body>
 </html>
