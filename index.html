@@ -2,395 +2,334 @@
 <html lang="zh">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="MemoAI">
 <meta name="theme-color" content="#0f0f13">
 <title>MemoAI 智能记事</title>
-<link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='%237c6af7'/><text y='.9em' font-size='70' x='15'>📝</text></svg>">
 <style>
-  *{box-sizing:border-box;margin:0;padding:0}
-  :root{
-    --bg:#0f0f13;--surface:#1a1a22;--surface2:#22222e;--surface3:#2a2a38;
-    --accent:#7c6af7;--accent2:#a594fa;--text:#f0eeff;--text2:#a09cc0;--text3:#6a6688;
-    --green:#4ade80;--amber:#fbbf24;--red:#f87171;--blue:#60a5fa;--pink:#f472b6;
-    --radius:14px;--radius-sm:8px;
-  }
-  body{font-family:'SF Pro Display',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;display:flex;flex-direction:column;max-width:480px;margin:0 auto;position:relative;overflow-x:hidden}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+:root{
+  --bg:#0f0f13;--surface:#1a1a22;--surface2:#22222e;--surface3:#2a2a38;
+  --accent:#7c6af7;--accent2:#a594fa;--text:#f0eeff;--text2:#a09cc0;--text3:#6a6688;
+  --green:#4ade80;--amber:#fbbf24;--red:#f87171;--blue:#60a5fa;--pink:#f472b6;
+}
+body{font-family:-apple-system,BlinkMacSystemFont,'SF Pro Display','Segoe UI',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;max-width:480px;margin:0 auto;overflow-x:hidden}
 
-  .header{padding:20px 20px 0;display:flex;align-items:center;justify-content:space-between}
-  .logo{font-size:22px;font-weight:700;letter-spacing:-0.5px}
-  .logo span{color:var(--accent2)}
-  .header-actions{display:flex;gap:10px}
-  .icon-btn{width:38px;height:38px;border-radius:10px;background:var(--surface2);border:none;color:var(--text2);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:18px;transition:all .2s}
-  .icon-btn:hover{background:var(--surface3);color:var(--text)}
+.header{padding:52px 20px 0;display:flex;align-items:center;justify-content:space-between}
+.logo{font-size:22px;font-weight:700;letter-spacing:-0.5px}
+.logo span{color:var(--accent2)}
+.header-right{display:flex;align-items:center;gap:10px}
+.sync-dot{width:8px;height:8px;border-radius:50%;background:var(--text3);transition:background .3s}
+.icon-btn{width:38px;height:38px;border-radius:10px;background:var(--surface2);border:none;color:var(--text2);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:18px}
 
-  .search-bar{margin:16px 20px 0;position:relative}
-  .search-bar input{width:100%;background:var(--surface2);border:1px solid #ffffff0f;border-radius:12px;padding:11px 16px 11px 42px;color:var(--text);font-size:14px;outline:none;transition:border .2s}
-  .search-bar input:focus{border-color:#7c6af740}
-  .search-bar input::placeholder{color:var(--text3)}
-  .search-icon{position:absolute;left:14px;top:50%;transform:translateY(-50%);color:var(--text3);font-size:16px}
+.search-bar{margin:16px 20px 0;position:relative}
+.search-bar input{width:100%;background:var(--surface2);border:1px solid #ffffff0f;border-radius:12px;padding:11px 16px 11px 42px;color:var(--text);font-size:16px;outline:none}
+.search-bar input::placeholder{color:var(--text3)}
+.search-icon{position:absolute;left:14px;top:50%;transform:translateY(-50%);color:var(--text3)}
 
-  .cats{display:flex;gap:8px;padding:16px 20px 0;overflow-x:auto;scrollbar-width:none}
-  .cats::-webkit-scrollbar{display:none}
-  .cat{padding:7px 16px;border-radius:20px;font-size:13px;font-weight:500;cursor:pointer;white-space:nowrap;border:1px solid transparent;transition:all .2s;background:var(--surface2);color:var(--text2)}
-  .cat.active{background:var(--accent);color:#fff;border-color:var(--accent)}
+.cats{display:flex;gap:8px;padding:14px 20px 0;overflow-x:auto;scrollbar-width:none}
+.cats::-webkit-scrollbar{display:none}
+.cat{padding:8px 16px;border-radius:20px;font-size:13px;font-weight:500;cursor:pointer;white-space:nowrap;border:none;background:var(--surface2);color:var(--text2)}
+.cat.active{background:var(--accent);color:#fff}
 
-  .notes{flex:1;padding:16px 20px 100px;display:flex;flex-direction:column;gap:12px;overflow-y:auto}
+.notes{padding:14px 20px 110px;display:flex;flex-direction:column;gap:12px}
 
-  .note{background:var(--surface);border:1px solid #ffffff08;border-radius:var(--radius);padding:16px;cursor:pointer;transition:all .2s;position:relative;overflow:hidden}
-  .note:hover{background:var(--surface2);border-color:#ffffff14}
-  .note::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;border-radius:3px 0 0 3px}
-  .note.account::before{background:var(--blue)}
-  .note.finance::before{background:var(--green)}
-  .note.todo::before{background:var(--amber)}
-  .note.health::before{background:var(--pink)}
-  .note.general::before{background:var(--accent)}
+.note{background:var(--surface);border:1px solid #ffffff08;border-radius:14px;padding:16px;cursor:pointer;position:relative;overflow:hidden}
+.note::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;border-radius:3px 0 0 3px}
+.note.account::before{background:var(--blue)}
+.note.finance::before{background:var(--green)}
+.note.todo::before{background:var(--amber)}
+.note.health::before{background:var(--pink)}
+.note.general::before{background:var(--accent)}
 
-  .note-header{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:8px}
-  .note-category{font-size:11px;font-weight:600;padding:3px 8px;border-radius:6px;letter-spacing:.3px;text-transform:uppercase}
-  .cat-account{background:#60a5fa18;color:var(--blue)}
-  .cat-finance{background:#4ade8018;color:var(--green)}
-  .cat-todo{background:#fbbf2418;color:var(--amber)}
-  .cat-health{background:#f472b618;color:var(--pink)}
-  .cat-general{background:#7c6af718;color:var(--accent2)}
+.note-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
+.note-cat-badge{font-size:11px;font-weight:600;padding:3px 8px;border-radius:6px;text-transform:uppercase;letter-spacing:.3px}
+.badge-account{background:#60a5fa18;color:var(--blue)}
+.badge-finance{background:#4ade8018;color:var(--green)}
+.badge-todo{background:#fbbf2418;color:var(--amber)}
+.badge-health{background:#f472b618;color:var(--pink)}
+.badge-general{background:#7c6af718;color:var(--accent2)}
+.note-time{font-size:11px;color:var(--text3)}
+.note-title{font-size:15px;font-weight:600;margin-bottom:5px;line-height:1.4}
+.note-body{font-size:13px;color:var(--text2);line-height:1.6;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+.secret-row{display:flex;align-items:center;gap:8px;margin-top:8px;background:var(--surface2);padding:8px 12px;border-radius:8px;font-size:12px}
+.secret-lbl{color:var(--text3);min-width:36px}
+.secret-val{color:var(--text);font-family:monospace;flex:1}
+.copy-btn{background:#7c6af718;border:none;color:var(--accent2);font-size:12px;padding:3px 8px;border-radius:5px;cursor:pointer}
 
-  .note-time{font-size:11px;color:var(--text3)}
-  .note-title{font-size:15px;font-weight:600;margin-bottom:6px;line-height:1.4}
-  .note-body{font-size:13px;color:var(--text2);line-height:1.6;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
-  .note-tags{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
-  .tag{font-size:11px;padding:3px 8px;background:var(--surface3);color:var(--text3);border-radius:6px}
+.fab-area{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:480px;padding:12px 20px 36px;display:flex;justify-content:center;gap:14px;background:linear-gradient(to top,var(--bg) 65%,transparent);z-index:100}
+.fab{width:54px;height:54px;border-radius:16px;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:22px;background:var(--surface2)}
+.fab:active{transform:scale(.92)}
+.fab-main{width:66px;height:66px;background:var(--accent);border-radius:20px;box-shadow:0 8px 28px #7c6af750;font-size:26px}
 
-  .secret-field{display:flex;align-items:center;gap:8px;margin-top:8px;background:var(--surface2);padding:8px 12px;border-radius:8px;font-size:12px}
-  .secret-label{color:var(--text3);min-width:52px}
-  .secret-val{color:var(--text);font-family:monospace;flex:1;letter-spacing:.5px}
-  .copy-btn{font-size:13px;cursor:pointer;padding:2px 6px;border-radius:5px;background:#7c6af718;border:none;color:var(--accent2)}
+.sheet-bg{position:fixed;inset:0;background:#000c;z-index:200;display:flex;align-items:flex-end;justify-content:center;opacity:0;pointer-events:none;transition:opacity .25s}
+.sheet-bg.open{opacity:1;pointer-events:all}
+.sheet{background:var(--surface);width:100%;max-width:480px;border-radius:22px 22px 0 0;padding:20px 20px 44px;transform:translateY(100%);transition:transform .3s cubic-bezier(.32,.72,0,1);max-height:88vh;overflow-y:auto}
+.sheet-bg.open .sheet{transform:translateY(0)}
+.sheet-handle{width:36px;height:4px;background:var(--surface3);border-radius:2px;margin:0 auto 18px}
+.sheet-title{font-size:18px;font-weight:700;margin-bottom:18px}
 
-  .fab-row{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:480px;padding:16px 20px 34px;display:flex;justify-content:center;gap:16px;background:linear-gradient(to top,var(--bg) 70%,transparent);z-index:100}
-  .fab{width:56px;height:56px;border-radius:16px;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:24px;transition:all .2s}
-  .fab:active{transform:scale(.93)}
-  .fab-main{width:68px;height:68px;background:var(--accent);border-radius:20px;box-shadow:0 8px 32px #7c6af755}
-  .fab-voice{background:var(--surface2)}
-  .fab-photo{background:var(--surface2)}
-  .fab-voice.recording{background:#f8717120;animation:pulse 1s infinite}
-  @keyframes pulse{0%,100%{box-shadow:0 0 0 0 #f8717140}50%{box-shadow:0 0 0 12px transparent}}
+.field{margin-bottom:14px}
+.field label{font-size:11px;color:var(--text3);font-weight:600;display:block;margin-bottom:7px;text-transform:uppercase;letter-spacing:.5px}
+.field input,.field textarea,.field select{width:100%;background:var(--surface2);border:1px solid #ffffff10;border-radius:10px;padding:12px 14px;color:var(--text);font-size:16px;outline:none;font-family:inherit}
+.field textarea{resize:none;height:88px;line-height:1.5}
+.field select{-webkit-appearance:none;cursor:pointer}
 
-  .modal-bg{position:fixed;inset:0;background:#000000cc;z-index:200;display:flex;align-items:flex-end;justify-content:center;opacity:0;pointer-events:none;transition:opacity .3s}
-  .modal-bg.show{opacity:1;pointer-events:all}
-  .modal{background:var(--surface);width:100%;max-width:480px;border-radius:24px 24px 0 0;padding:24px 20px 40px;transform:translateY(100%);transition:transform .3s cubic-bezier(.32,.72,0,1);max-height:90vh;overflow-y:auto}
-  .modal-bg.show .modal{transform:translateY(0)}
-  .modal-handle{width:36px;height:4px;background:var(--surface3);border-radius:2px;margin:0 auto 20px}
-  .modal-title{font-size:18px;font-weight:700;margin-bottom:20px}
+.btn{width:100%;padding:15px;border-radius:12px;border:none;font-size:15px;font-weight:600;cursor:pointer}
+.btn-primary{background:var(--accent);color:#fff;margin-bottom:10px}
+.btn-secondary{background:var(--surface2);color:var(--text2)}
 
-  .input-group{margin-bottom:16px}
-  .input-group label{font-size:12px;color:var(--text3);font-weight:500;display:block;margin-bottom:8px;text-transform:uppercase;letter-spacing:.5px}
-  .input-group input,.input-group textarea,.input-group select{width:100%;background:var(--surface2);border:1px solid #ffffff10;border-radius:10px;padding:12px 14px;color:var(--text);font-size:14px;outline:none;font-family:inherit;transition:border .2s}
-  .input-group input:focus,.input-group textarea:focus{border-color:#7c6af750}
-  .input-group textarea{resize:none;height:90px;line-height:1.5}
-  .input-group select{cursor:pointer;-webkit-appearance:none}
+.voice-wrap{display:flex;flex-direction:column;align-items:center;padding:16px 0 8px}
+.voice-btn{width:90px;height:90px;border-radius:50%;background:#f8717115;border:none;font-size:38px;cursor:pointer;margin-bottom:16px;position:relative}
+.voice-btn.on::after{content:'';position:absolute;inset:-8px;border-radius:50%;border:2px solid var(--red);animation:ring 1.5s infinite}
+@keyframes ring{0%{opacity:.6;transform:scale(1)}100%{opacity:0;transform:scale(1.4)}}
+.voice-status{font-size:13px;color:var(--text3);margin-bottom:10px}
+.voice-result{font-size:14px;color:var(--text2);text-align:center;line-height:1.6;min-height:40px;padding:0 8px}
 
-  .ai-status{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--accent2);padding:10px 14px;background:#7c6af710;border-radius:10px;margin-bottom:16px}
-  .ai-dot{width:8px;height:8px;background:var(--accent2);border-radius:50%;animation:blink 1.2s infinite}
-  @keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
+.photo-preview{width:100%;border-radius:12px;overflow:hidden;background:var(--surface2);min-height:70px;display:flex;align-items:center;justify-content:center;margin-bottom:12px;color:var(--text3);font-size:13px}
+.photo-preview img{width:100%;display:block}
 
-  .btn{width:100%;padding:15px;border-radius:12px;border:none;font-size:15px;font-weight:600;cursor:pointer;transition:all .2s}
-  .btn-primary{background:var(--accent);color:#fff}
-  .btn-primary:hover{background:var(--accent2)}
-  .btn-secondary{background:var(--surface2);color:var(--text2);margin-top:10px}
+.detail-view{padding:52px 20px 100px}
+.back-btn{display:flex;align-items:center;gap:6px;color:var(--accent2);font-size:15px;background:none;border:none;cursor:pointer;margin-bottom:20px;padding:0}
+.detail-title{font-size:22px;font-weight:700;line-height:1.3;margin-bottom:10px}
+.detail-body{font-size:15px;color:var(--text2);line-height:1.8}
+.detail-secrets{margin-top:18px;display:flex;flex-direction:column;gap:10px}
+.detail-tags{display:flex;flex-wrap:wrap;gap:6px;margin-top:16px}
+.tag{font-size:11px;padding:3px 9px;background:var(--surface3);color:var(--text3);border-radius:6px}
+.del-btn{width:100%;padding:14px;border-radius:12px;border:none;background:#f8717115;color:var(--red);font-size:15px;font-weight:600;cursor:pointer;margin-top:28px}
 
-  .voice-ui{display:flex;flex-direction:column;align-items:center;padding:20px 0}
-  .voice-ring{width:100px;height:100px;border-radius:50%;background:#f8717115;display:flex;align-items:center;justify-content:center;font-size:42px;position:relative;cursor:pointer;margin-bottom:20px}
-  .voice-ring.active::after{content:'';position:absolute;inset:-8px;border-radius:50%;border:2px solid var(--red);animation:ring 1.5s infinite;opacity:.6}
-  @keyframes ring{0%{transform:scale(1);opacity:.6}100%{transform:scale(1.4);opacity:0}}
-  .voice-text{font-size:14px;color:var(--text2);text-align:center;max-height:80px;overflow-y:auto;line-height:1.6;padding:0 10px}
+.empty{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:80px 20px;gap:10px;color:var(--text3)}
+.empty-icon{font-size:44px;opacity:.35}
 
-  .photo-preview{width:100%;border-radius:12px;overflow:hidden;margin-bottom:12px;background:var(--surface2);min-height:80px;display:flex;align-items:center;justify-content:center}
-  .photo-preview img{width:100%;display:block;border-radius:12px}
-  .photo-placeholder{color:var(--text3);font-size:13px}
-
-  .empty{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:60px 20px;gap:12px;color:var(--text3)}
-  .empty-icon{font-size:48px;opacity:.4}
-  .empty-text{font-size:14px;text-align:center;line-height:1.6}
-
-  .detail-view{padding:20px 20px 100px;overflow-y:auto}
-  .detail-back{display:flex;align-items:center;gap:8px;color:var(--accent2);font-size:14px;cursor:pointer;margin-bottom:20px}
-  .detail-title{font-size:22px;font-weight:700;margin-bottom:8px;line-height:1.3}
-  .detail-body{font-size:15px;color:var(--text2);line-height:1.8}
-  .detail-fields{margin-top:20px;display:flex;flex-direction:column;gap:10px}
-
-  .toast{position:fixed;top:24px;left:50%;transform:translateX(-50%);background:#4ade80;color:#000;padding:8px 20px;border-radius:10px;font-size:13px;font-weight:600;z-index:999;opacity:0;transition:opacity .3s}
-  .toast.show{opacity:1}
-
-
+.toast{position:fixed;top:60px;left:50%;transform:translateX(-50%);background:var(--green);color:#000;padding:8px 20px;border-radius:10px;font-size:13px;font-weight:600;z-index:999;opacity:0;transition:opacity .25s;pointer-events:none}
+.toast.show{opacity:1}
 </style>
 </head>
 <body>
 
-<div id="app">
-  <div id="list-view">
-    <div class="header">
-      <div class="logo">Memo<span>AI</span></div>
-      <div class="header-actions">
-        <div style="display:flex;align-items:center;gap:6px;padding:0 4px">
-          <div id="syncDot" title="同步状态" style="width:8px;height:8px;border-radius:50%;background:var(--text3);transition:background .3s;cursor:default"></div>
-        </div>
-        <button class="icon-btn" onclick="showStats()">📊</button>
-
-      </div>
-    </div>
-
-    <div class="search-bar">
-      <span class="search-icon">🔍</span>
-      <input type="text" placeholder="搜索笔记..." id="search" oninput="filterNotes()">
-    </div>
-
-    <div class="cats" id="cats">
-      <div class="cat active" onclick="filterCat('all',this)">全部</div>
-      <div class="cat" onclick="filterCat('account',this)">🔐 账号</div>
-      <div class="cat" onclick="filterCat('finance',this)">💰 财务</div>
-      <div class="cat" onclick="filterCat('todo',this)">✅ 待办</div>
-      <div class="cat" onclick="filterCat('health',this)">❤️ 健康</div>
-      <div class="cat" onclick="filterCat('general',this)">📝 笔记</div>
-    </div>
-
-    <div id="notes-list" class="notes"></div>
-
-    <div class="fab-row">
-      <button class="fab fab-voice" id="voiceBtn" onclick="openVoice()" title="语音记录">🎤</button>
-      <button class="fab fab-main" onclick="openNew()" title="新建笔记">✏️</button>
-      <button class="fab fab-photo" onclick="openPhoto()" title="拍照识别">📷</button>
+<div id="list-view">
+  <div class="header">
+    <div class="logo">Memo<span>AI</span></div>
+    <div class="header-right">
+      <div class="sync-dot" id="syncDot" title="同步状态"></div>
+      <button class="icon-btn" onclick="showStats()">📊</button>
     </div>
   </div>
-
-  <div id="detail-view" style="display:none" class="detail-view">
-    <div class="detail-back" onclick="backToList()">‹ 返回</div>
-    <div id="detail-content"></div>
-    <div style="margin-top:30px">
-      <button class="btn" style="background:#f8717120;color:var(--red)" onclick="deleteNote()">🗑️ 删除此笔记</button>
-    </div>
+  <div class="search-bar">
+    <span class="search-icon">🔍</span>
+    <input type="text" id="searchInput" placeholder="搜索笔记..." oninput="renderNotes()">
+  </div>
+  <div class="cats" id="catBar">
+    <div class="cat active" onclick="setCat('all',this)">全部</div>
+    <div class="cat" onclick="setCat('account',this)">🔐 账号</div>
+    <div class="cat" onclick="setCat('finance',this)">💰 财务</div>
+    <div class="cat" onclick="setCat('todo',this)">✅ 待办</div>
+    <div class="cat" onclick="setCat('health',this)">❤️ 健康</div>
+    <div class="cat" onclick="setCat('general',this)">📝 笔记</div>
+  </div>
+  <div id="notesList" class="notes"></div>
+  <div class="fab-area">
+    <button class="fab" onclick="openVoice()">🎤</button>
+    <button class="fab fab-main" onclick="openNew()">✏️</button>
+    <button class="fab" onclick="openPhoto()">📷</button>
   </div>
 </div>
 
-<!-- New/Edit Modal -->
-<div class="modal-bg" id="newModal">
-  <div class="modal">
-    <div class="modal-handle"></div>
-    <div class="modal-title" id="modalTitle">新建笔记</div>
-    <div class="ai-status" id="aiStatus" style="display:none;display:none">
-      <div class="ai-dot"></div>
-      <span id="aiStatusText">AI 正在分析内容...</span>
-    </div>
-    <div class="input-group">
-      <label>标题</label>
-      <input type="text" id="noteTitle" placeholder="输入标题...">
-    </div>
-    <div class="input-group">
-      <label>内容</label>
-      <textarea id="noteBody" placeholder="记录任何内容，AI 会自动识别账号密码、待办事项等..."></textarea>
-    </div>
-    <div class="input-group">
-      <label>分类（AI 会自动判断）</label>
-      <select id="noteCat">
-        <option value="general">📝 通用笔记</option>
+<div id="detail-view" style="display:none">
+  <div class="detail-view">
+    <button class="back-btn" onclick="backToList()">‹ 返回</button>
+    <div id="detailContent"></div>
+    <button class="del-btn" onclick="deleteNote()">🗑️ 删除此笔记</button>
+  </div>
+</div>
+
+<!-- 新建笔记 -->
+<div class="sheet-bg" id="newSheet">
+  <div class="sheet">
+    <div class="sheet-handle"></div>
+    <div class="sheet-title">新建笔记</div>
+    <div class="field"><label>标题</label><input type="text" id="nTitle" placeholder="输入标题..."></div>
+    <div class="field"><label>内容</label><textarea id="nBody" placeholder="输入内容，会自动识别分类..."></textarea></div>
+    <div class="field">
+      <label>分类（自动识别，也可手动选）</label>
+      <select id="nCat">
+        <option value="auto">🤖 自动识别</option>
         <option value="account">🔐 账号密码</option>
         <option value="finance">💰 财务</option>
         <option value="todo">✅ 待办事项</option>
-        <option value="health">❤️ 健康记录</option>
+        <option value="health">❤️ 健康</option>
+        <option value="general">📝 笔记</option>
       </select>
     </div>
-    <button class="btn btn-primary" onclick="analyzeAndSave()">✓ 保存笔记</button>
-    <button class="btn btn-secondary" onclick="closeModal('newModal')">取消</button>
+    <button class="btn btn-primary" onclick="saveNote()">✓ 保存笔记</button>
+    <button class="btn btn-secondary" onclick="closeSheet('newSheet')">取消</button>
   </div>
 </div>
 
-<!-- Voice Modal -->
-<div class="modal-bg" id="voiceModal">
-  <div class="modal">
-    <div class="modal-handle"></div>
-    <div class="modal-title">语音记录</div>
-    <div class="voice-ui">
-      <div class="voice-ring" id="voiceRing" onclick="toggleVoice()">🎤</div>
-      <div id="voiceStatus" style="font-size:13px;color:var(--text3);margin-bottom:12px">点击开始录音</div>
-      <div class="voice-text" id="voiceText">录音内容将显示在这里...</div>
+<!-- 语音 -->
+<div class="sheet-bg" id="voiceSheet">
+  <div class="sheet">
+    <div class="sheet-handle"></div>
+    <div class="sheet-title">语音记录</div>
+    <div class="voice-wrap">
+      <button class="voice-btn" id="voiceBtn" onclick="toggleVoice()">🎤</button>
+      <div class="voice-status" id="voiceStatus">点击开始录音</div>
+      <div class="voice-result" id="voiceResult">语音内容显示在这里...</div>
     </div>
-    <div class="ai-status" id="voiceAiStatus" style="display:none">
-      <div class="ai-dot"></div>
-      <span id="voiceAiText">AI 正在理解语音内容...</span>
-    </div>
-    <button class="btn btn-primary" id="voiceSaveBtn" style="display:none" onclick="saveVoiceNote()">保存此笔记</button>
-    <button class="btn btn-secondary" onclick="closeModal('voiceModal');stopVoice()">关闭</button>
+    <button class="btn btn-primary" id="voiceSave" style="display:none" onclick="saveVoice()">✓ 保存语音笔记</button>
+    <button class="btn btn-secondary" onclick="closeSheet('voiceSheet');stopVoice()">关闭</button>
   </div>
 </div>
 
-<!-- Photo Modal -->
-<div class="modal-bg" id="photoModal">
-  <div class="modal">
-    <div class="modal-handle"></div>
-    <div class="modal-title">拍照识别</div>
-    <div class="photo-preview" id="photoPreview">
-      <div class="photo-placeholder">📷 点击下方选择或拍摄图片</div>
+<!-- 拍照 -->
+<div class="sheet-bg" id="photoSheet">
+  <div class="sheet">
+    <div class="sheet-handle"></div>
+    <div class="sheet-title">拍照记录</div>
+    <div class="photo-preview" id="photoPreview">📷 点击下方按钮拍照或选图</div>
+    <input type="file" id="photoFile" accept="image/*" capture="environment" style="display:none" onchange="handlePhoto(this)">
+    <div class="field" id="photoField" style="display:none;margin-top:12px">
+      <label>补充说明（可选）</label>
+      <textarea id="photoNote" placeholder="可以补充说明..."></textarea>
     </div>
-    <input type="file" id="photoInput" accept="image/*" capture="environment" style="display:none" onchange="handlePhoto(this)">
-    <div class="ai-status" id="photoAiStatus" style="display:none">
-      <div class="ai-dot"></div>
-      <span id="photoAiText">AI 正在识别图片内容...</span>
-    </div>
-    <div id="photoResult" style="display:none">
-      <div class="input-group" style="margin-top:12px">
-        <label>识别结果（可编辑）</label>
-        <textarea id="photoResultText" style="height:100px;background:var(--surface2);border:1px solid #fff1;border-radius:10px;padding:12px;color:var(--text);font-size:13px;width:100%;outline:none;resize:none;font-family:inherit"></textarea>
-      </div>
-    </div>
-    <button class="btn btn-primary" onclick="document.getElementById('photoInput').click()">📷 选择 / 拍摄图片</button>
-    <button class="btn btn-secondary" id="photoSaveBtn" style="display:none" onclick="savePhotoNote()">✅ 保存识别结果</button>
-    <button class="btn btn-secondary" onclick="closeModal('photoModal')">关闭</button>
+    <button class="btn btn-primary" onclick="document.getElementById('photoFile').click()">📷 拍照 / 选择图片</button>
+    <button class="btn btn-secondary" id="photoSave" style="display:none" onclick="savePhoto()">✓ 保存</button>
+    <button class="btn btn-secondary" onclick="closeSheet('photoSheet')">关闭</button>
   </div>
 </div>
 
 <div class="toast" id="toast"></div>
 
 <script>
-let notes = JSON.parse(localStorage.getItem('memoai_notes')||'[]');
-let currentCat = 'all';
-let currentNoteId = null;
-let voiceRecognition = null;
-let isRecording = false;
-let voiceTranscript = '';
-let photoBase64 = '';
-let editingId = null;
+const CATS = {
+  account:{label:'账号密码',badge:'badge-account',emoji:'🔐'},
+  finance:{label:'财务',badge:'badge-finance',emoji:'💰'},
+  todo:{label:'待办',badge:'badge-todo',emoji:'✅'},
+  health:{label:'健康',badge:'badge-health',emoji:'❤️'},
+  general:{label:'笔记',badge:'badge-general',emoji:'📝'}
+};
 
-// 关键词自动分类
-function autoClassify(text){
+let notes = JSON.parse(localStorage.getItem('memoai')||'[]');
+let curCat = 'all';
+let curNoteId = null;
+let voiceRec = null;
+let isRec = false;
+let voiceText = '';
+let photoB64 = '';
+
+// ── 关键词分类 ─────────────────────────────
+function classify(text){
   const t = text.toLowerCase();
-  if(/密码|账号|登录|注册|用户名|邮箱|username|password|email|账户/.test(t)) return 'account';
-  if(/元|钱|转账|报销|收入|花费|消费|支出|工资|余额|付款|费用|￥|rmb/.test(t)) return 'finance';
-  if(/待办|任务|记得|提醒|计划|todo|需要|要做|别忘|截止|deadline/.test(t)) return 'todo';
-  if(/跑步|睡眠|体重|医院|药|健身|运动|血压|心率|卡路里|饮食|锻炼/.test(t)) return 'health';
+  if(/密码|账号|登录|注册|用户名|username|password|@/.test(t)) return 'account';
+  if(/元|钱|转账|报销|收入|花费|消费|支出|工资|余额|付款|费用|￥/.test(t)) return 'finance';
+  if(/待办|任务|记得|提醒|计划|需要做|要做|别忘|截止/.test(t)) return 'todo';
+  if(/跑步|睡眠|体重|医院|药|健身|运动|血压|心率|卡路里|锻炼/.test(t)) return 'health';
   return 'general';
 }
 
-const CATEGORIES = {
-  account:{label:'账号密码',color:'cat-account',emoji:'🔐'},
-  finance:{label:'财务',color:'cat-finance',emoji:'💰'},
-  todo:{label:'待办事项',color:'cat-todo',emoji:'✅'},
-  health:{label:'健康',color:'cat-health',emoji:'❤️'},
-  general:{label:'笔记',color:'cat-general',emoji:'📝'}
-};
-
-if(!notes.length){
-  notes=[
-    {id:1,title:'Gmail 账号',category:'account',body:'工作邮箱，用于日常办公',time:'06-01 09:23',account:'work@gmail.com',password:'Wk#2025@secure',tags:['邮箱','工作']},
-    {id:2,title:'本周待办',category:'todo',body:'- 完成项目报告\n- 联系客户 A\n- 预约牙医\n- 更新简历',time:'06-01 08:00',account:'',password:'',tags:['工作','本周']},
-    {id:3,title:'晨跑记录',category:'health',body:'5km，用时 28 分钟，心率 145bpm，状态不错。',time:'05-31 07:30',account:'',password:'',tags:['运动']},
-  ];
-  save();
+function extractSecrets(text){
+  let account = '', password = '';
+  const accM = text.match(/账号[:：\s]+(\S+)/);
+  const pwdM = text.match(/密码[:：\s]+(\S+)/);
+  const emailM = text.match(/([a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,})/);
+  if(accM) account = accM[1];
+  else if(emailM) account = emailM[1];
+  if(pwdM) password = pwdM[1];
+  return {account, password};
 }
 
-// ── 云端同步 ──────────────────────────────
+// ── 云端同步 ───────────────────────────────
 let syncTimer = null;
-let isSyncing = false;
+
+function localSave(){
+  localStorage.setItem('memoai', JSON.stringify(notes));
+}
 
 function save(){
-  localStorage.setItem('memoai_notes', JSON.stringify(notes));
-  // 防抖：1.5秒内多次操作只同步一次
+  localSave();
   clearTimeout(syncTimer);
-  syncTimer = setTimeout(syncToCloud, 1500);
+  syncTimer = setTimeout(pushCloud, 1200);
 }
 
-async function syncToCloud(){
-  if(isSyncing) return;
-  isSyncing = true;
-  setSyncStatus('syncing');
+async function pushCloud(){
+  setSyncDot('ing');
   try{
-    const resp = await fetch('/api/notes', {
-      method: 'POST',
-      headers: {'Content-Type':'application/json'},
+    const r = await fetch('/api/notes',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
       body: JSON.stringify({notes})
     });
-    if(resp.ok){ setSyncStatus('ok'); }
-    else { setSyncStatus('err'); }
-  }catch(e){ setSyncStatus('err'); }
-  isSyncing = false;
+    setSyncDot(r.ok ? 'ok' : 'err');
+  }catch(e){ setSyncDot('err'); }
 }
 
-async function loadFromCloud(){
-  setSyncStatus('syncing');
+async function pullCloud(){
+  setSyncDot('ing');
   try{
-    const resp = await fetch('/api/notes');
-    if(!resp.ok) throw new Error();
-    const data = await resp.json();
-    if(data.notes && data.notes.length > 0){
-      // 云端有数据则用云端，否则保留本地
-      notes = data.notes;
-      localStorage.setItem('memoai_notes', JSON.stringify(notes));
+    const r = await fetch('/api/notes');
+    if(!r.ok) throw new Error();
+    const d = await r.json();
+    if(d.notes && d.notes.length > 0){
+      notes = d.notes;
+      localSave();
     }
-    setSyncStatus('ok');
-  }catch(e){
-    setSyncStatus('err');
-  }
+    setSyncDot('ok');
+  }catch(e){ setSyncDot('err'); }
   renderNotes();
 }
 
-function setSyncStatus(state){
-  const el = document.getElementById('syncDot');
-  if(!el) return;
-  el.title = state==='ok'?'已同步':state==='syncing'?'同步中...':'同步失败，使用本地数据';
-  el.style.background = state==='ok'?'var(--green)':state==='syncing'?'var(--amber)':'var(--red)';
+function setSyncDot(state){
+  const d = document.getElementById('syncDot');
+  d.style.background = state==='ok'?'var(--green)':state==='ing'?'var(--amber)':'var(--red)';
+  d.title = state==='ok'?'已同步':state==='ing'?'同步中...':'同步失败';
 }
 
-function toast(msg){
-  const el=document.getElementById('toast');
-  el.textContent=msg;el.classList.add('show');
-  setTimeout(()=>el.classList.remove('show'),1800);
-}
-
+// ── 渲染 ───────────────────────────────────
 function renderNotes(){
-  const q=document.getElementById('search').value.toLowerCase();
-  const list=notes.filter(n=>{
-    const matchCat=currentCat==='all'||n.category===currentCat;
-    const matchQ=!q||(n.title+n.body+(n.tags||[]).join('')).toLowerCase().includes(q);
-    return matchCat&&matchQ;
+  const q = document.getElementById('searchInput').value.toLowerCase();
+  const list = notes.filter(n=>{
+    const mc = curCat==='all'||n.category===curCat;
+    const mq = !q||(n.title+n.body).toLowerCase().includes(q);
+    return mc&&mq;
   }).sort((a,b)=>b.id-a.id);
 
-  const el=document.getElementById('notes-list');
+  const el = document.getElementById('notesList');
   if(!list.length){
-    el.innerHTML=`<div class="empty"><div class="empty-icon">📭</div><div class="empty-text">暂无笔记<br>点击下方按钮添加</div></div>`;
+    el.innerHTML=`<div class="empty"><div class="empty-icon">📭</div><div style="font-size:14px">暂无笔记，点下方按钮添加</div></div>`;
     return;
   }
-  el.innerHTML=list.map(n=>`
+  el.innerHTML = list.map(n=>`
     <div class="note ${n.category}" onclick="showNote(${n.id})">
       <div class="note-header">
-        <span class="note-category ${CATEGORIES[n.category].color}">${CATEGORIES[n.category].emoji} ${CATEGORIES[n.category].label}</span>
+        <span class="note-cat-badge ${CATS[n.category].badge}">${CATS[n.category].emoji} ${CATS[n.category].label}</span>
         <span class="note-time">${n.time}</span>
       </div>
       <div class="note-title">${n.title}</div>
       <div class="note-body">${n.body.replace(/\n/g,'<br>')}</div>
-      ${n.account?`<div class="secret-field"><span class="secret-label">账号</span><span class="secret-val">${n.account}</span></div>`:''}
-      ${n.password?`<div class="secret-field"><span class="secret-label">密码</span><span class="secret-val">••••••••</span><button class="copy-btn" onclick="event.stopPropagation();copyText('${n.password}')">复制</button></div>`:''}
-      ${(n.tags||[]).length?`<div class="note-tags">${n.tags.map(t=>`<span class="tag">#${t}</span>`).join('')}</div>`:''}
+      ${n.account?`<div class="secret-row"><span class="secret-lbl">账号</span><span class="secret-val">${n.account}</span></div>`:''}
+      ${n.password?`<div class="secret-row"><span class="secret-lbl">密码</span><span class="secret-val">••••••••</span><button class="copy-btn" onclick="event.stopPropagation();copyTxt('${n.password}')">复制</button></div>`:''}
     </div>
   `).join('');
 }
 
 function showNote(id){
-  currentNoteId=id;
-  const n=notes.find(x=>x.id===id);
-  if(!n) return;
+  curNoteId = id;
+  const n = notes.find(x=>x.id===id);
   document.getElementById('list-view').style.display='none';
   document.getElementById('detail-view').style.display='block';
-  document.getElementById('detail-content').innerHTML=`
+  document.getElementById('detailContent').innerHTML=`
     <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px">
-      <span class="note-category ${CATEGORIES[n.category].color}">${CATEGORIES[n.category].emoji} ${CATEGORIES[n.category].label}</span>
+      <span class="note-cat-badge ${CATS[n.category].badge}">${CATS[n.category].emoji} ${CATS[n.category].label}</span>
       <span style="font-size:12px;color:var(--text3)">${n.time}</span>
     </div>
     <div class="detail-title">${n.title}</div>
-    <div class="detail-body" style="margin-top:12px">${n.body.replace(/\n/g,'<br>')}</div>
-    ${n.account||n.password?`<div class="detail-fields">
-      ${n.account?`<div class="secret-field"><span class="secret-label">账号</span><span class="secret-val">${n.account}</span><button class="copy-btn" onclick="copyText('${n.account}')">复制</button></div>`:''}
-      ${n.password?`<div class="secret-field"><span class="secret-label">密码</span><span class="secret-val" id="pwdDisplay">••••••••</span><button class="copy-btn" onclick="togglePwd('${n.password}')">查看</button><button class="copy-btn" onclick="copyText('${n.password}')" style="margin-left:4px">复制</button></div>`:''}
+    <div class="detail-body">${n.body.replace(/\n/g,'<br>')}</div>
+    ${n.account||n.password?`<div class="detail-secrets">
+      ${n.account?`<div class="secret-row"><span class="secret-lbl">账号</span><span class="secret-val">${n.account}</span><button class="copy-btn" onclick="copyTxt('${n.account}')">复制</button></div>`:''}
+      ${n.password?`<div class="secret-row"><span class="secret-lbl">密码</span><span class="secret-val" id="pwdTxt">••••••••</span><button class="copy-btn" onclick="togglePwd('${n.password}')">查看</button><button class="copy-btn" style="margin-left:4px" onclick="copyTxt('${n.password}')">复制</button></div>`:''}
     </div>`:''}
-    ${(n.tags||[]).length?`<div class="note-tags" style="margin-top:16px">${n.tags.map(t=>`<span class="tag">#${t}</span>`).join('')}</div>`:''}
   `;
 }
 
@@ -400,214 +339,169 @@ function backToList(){
 }
 
 function deleteNote(){
-  if(!confirm('确认删除这条笔记？')) return;
-  notes=notes.filter(n=>n.id!==currentNoteId);
-  save();backToList();renderNotes();
+  if(!confirm('确认删除？')) return;
+  notes = notes.filter(n=>n.id!==curNoteId);
+  save(); backToList(); renderNotes();
 }
 
-function togglePwd(pwd){
-  const el=document.getElementById('pwdDisplay');
-  el.textContent=el.textContent==='••••••••'?pwd:'••••••••';
-}
-
-function copyText(t){
-  navigator.clipboard.writeText(t).then(()=>toast('✓ 已复制到剪贴板')).catch(()=>{
-    const ta=document.createElement('textarea');
-    ta.value=t;document.body.appendChild(ta);ta.select();
-    document.execCommand('copy');document.body.removeChild(ta);
-    toast('✓ 已复制');
-  });
-}
-
-function filterCat(cat,el){
-  currentCat=cat;
+function setCat(cat, el){
+  curCat = cat;
   document.querySelectorAll('.cat').forEach(c=>c.classList.remove('active'));
   el.classList.add('active');
   renderNotes();
 }
 
-function filterNotes(){renderNotes()}
-
-function openModal(id){document.getElementById(id).classList.add('show')}
-function closeModal(id){document.getElementById(id).classList.remove('show')}
-
+// ── 新建笔记 ───────────────────────────────
 function openNew(){
-  editingId=null;
-  document.getElementById('modalTitle').textContent='新建笔记';
-  document.getElementById('noteTitle').value='';
-  document.getElementById('noteBody').value='';
-  document.getElementById('noteCat').value='general';
-  document.getElementById('aiStatus').style.display='none';
-  openModal('newModal');
+  document.getElementById('nTitle').value='';
+  document.getElementById('nBody').value='';
+  document.getElementById('nCat').value='auto';
+  openSheet('newSheet');
 }
 
-function analyzeAndSave(){
-  const title=document.getElementById('noteTitle').value.trim();
-  const body=document.getElementById('noteBody').value.trim();
-  if(!title&&!body){alert('请输入标题或内容');return;}
-
-  const combined = title + ' ' + body;
-  const category = document.getElementById('noteCat').value !== 'general'
-    ? document.getElementById('noteCat').value
-    : autoClassify(combined);
-
-  // 提取账号密码
-  let account='', password='';
-  const accMatch = combined.match(/账号[:：\s]+(\S+)/);
-  const pwdMatch = combined.match(/密码[:：\s]+(\S+)/);
-  const emailMatch = combined.match(/([a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,})/);
-  if(accMatch) account = accMatch[1];
-  else if(emailMatch) account = emailMatch[1];
-  if(pwdMatch) password = pwdMatch[1];
-
-  const newNote={
-    id:editingId||Date.now(),
-    title:title||body.slice(0,20),
-    category,
-    body,
-    time:new Date().toLocaleString('zh-CN',{month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'}).replace(/\//g,'-'),
-    account,
-    password,
-    tags:[]
-  };
-
-  if(editingId){notes=notes.map(n=>n.id===editingId?newNote:n);}
-  else{notes.unshift(newNote);}
-  save();
-  closeModal('newModal');
-  renderNotes();
-  toast('✓ 已保存');
+function saveNote(){
+  const title = document.getElementById('nTitle').value.trim();
+  const body  = document.getElementById('nBody').value.trim();
+  if(!title&&!body){alert('请输入内容');return;}
+  const catSel = document.getElementById('nCat').value;
+  const category = catSel==='auto' ? classify(title+' '+body) : catSel;
+  const {account,password} = extractSecrets(title+' '+body);
+  notes.unshift({id:Date.now(),title:title||body.slice(0,20),category,body,time:nowStr(),account,password});
+  save(); renderNotes(); closeSheet('newSheet'); showToast('✓ 已保存');
 }
 
+// ── 语音 ───────────────────────────────────
 function openVoice(){
-  voiceTranscript='';
-  document.getElementById('voiceText').textContent='录音内容将显示在这里...';
-  document.getElementById('voiceText').dataset.result='';
+  voiceText='';
+  document.getElementById('voiceResult').textContent='语音内容显示在这里...';
   document.getElementById('voiceStatus').textContent='点击开始录音';
-  document.getElementById('voiceSaveBtn').style.display='none';
-  document.getElementById('voiceAiStatus').style.display='none';
-  document.getElementById('voiceRing').classList.remove('active');
-  isRecording=false;
-  openModal('voiceModal');
+  document.getElementById('voiceSave').style.display='none';
+  document.getElementById('voiceBtn').classList.remove('on');
+  isRec=false;
+  openSheet('voiceSheet');
 }
 
 function toggleVoice(){
+  if(isRec){stopVoice();return;}
   if(!('webkitSpeechRecognition' in window||'SpeechRecognition' in window)){
-    document.getElementById('voiceStatus').textContent='请使用 Chrome 浏览器以支持语音识别';
-    return;
+    document.getElementById('voiceStatus').textContent='请用 Chrome 浏览器';return;
   }
-  if(isRecording){stopVoice();return;}
-  const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
-  voiceRecognition=new SR();
-  voiceRecognition.lang='zh-CN';
-  voiceRecognition.continuous=true;
-  voiceRecognition.interimResults=true;
-  voiceRecognition.onresult=e=>{
-    let interim='',final='';
+  const SR = window.SpeechRecognition||window.webkitSpeechRecognition;
+  voiceRec = new SR();
+  voiceRec.lang='zh-CN';voiceRec.continuous=true;voiceRec.interimResults=true;
+  voiceRec.onresult=e=>{
+    let final='',interim='';
     for(let i=e.resultIndex;i<e.results.length;i++){
       if(e.results[i].isFinal)final+=e.results[i][0].transcript;
       else interim+=e.results[i][0].transcript;
     }
-    voiceTranscript+=final;
-    document.getElementById('voiceText').textContent=(voiceTranscript+interim)||'正在听...';
+    voiceText+=final;
+    document.getElementById('voiceResult').textContent=(voiceText+interim)||'正在听...';
   };
-  voiceRecognition.onerror=()=>{document.getElementById('voiceStatus').textContent='识别出错，请重试';stopVoice();};
-  voiceRecognition.start();
-  isRecording=true;
-  document.getElementById('voiceRing').classList.add('active');
-  document.getElementById('voiceStatus').textContent='正在录音... 点击停止';
+  voiceRec.onerror=()=>stopVoice();
+  voiceRec.start();
+  isRec=true;
+  document.getElementById('voiceBtn').classList.add('on');
+  document.getElementById('voiceStatus').textContent='录音中... 点击停止';
 }
 
 function stopVoice(){
-  if(voiceRecognition){voiceRecognition.stop();voiceRecognition=null;}
-  isRecording=false;
-  document.getElementById('voiceRing').classList.remove('active');
+  if(voiceRec){voiceRec.stop();voiceRec=null;}
+  isRec=false;
+  document.getElementById('voiceBtn').classList.remove('on');
   document.getElementById('voiceStatus').textContent='录音完成';
-  if(voiceTranscript){
-    document.getElementById('voiceSaveBtn').style.display='block';
-    processVoice(voiceTranscript);
-  }
+  if(voiceText) document.getElementById('voiceSave').style.display='block';
 }
 
-function processVoice(text){
-  const category = autoClassify(text);
-  const accMatch = text.match(/账号[:：\s]+(\S+)/);
-  const pwdMatch = text.match(/密码[:：\s]+(\S+)/);
-  const emailMatch = text.match(/([a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,})/);
-  const result = {
-    category,
-    title: text.slice(0,20),
-    body: text,
-    account: accMatch?accMatch[1]:(emailMatch?emailMatch[1]:''),
-    password: pwdMatch?pwdMatch[1]:'',
-    tags:['语音']
-  };
-  document.getElementById('voiceAiStatus').style.display='flex';
-  document.getElementById('voiceAiText').textContent='识别完成，点击保存 ✓';
-  document.getElementById('voiceText').dataset.result=JSON.stringify(result);
+function saveVoice(){
+  if(!voiceText) return;
+  const category = classify(voiceText);
+  const {account,password} = extractSecrets(voiceText);
+  notes.unshift({id:Date.now(),title:voiceText.slice(0,20),category,body:voiceText,time:nowStr(),account,password});
+  save(); renderNotes(); closeSheet('voiceSheet'); showToast('✓ 语音笔记已保存');
 }
 
-function saveVoiceNote(){
-  let noteData;
-  const raw=document.getElementById('voiceText').dataset.result;
-  if(raw){try{noteData=JSON.parse(raw)}catch(e){}}
-  if(!noteData){noteData={category:'general',title:'语音笔记 '+new Date().toLocaleTimeString('zh-CN',{hour:'2-digit',minute:'2-digit'}),body:voiceTranscript,tags:['语音']};}
-  notes.unshift({id:Date.now(),...noteData,time:new Date().toLocaleString('zh-CN',{month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'}).replace(/\//g,'-'),account:noteData.account||'',password:noteData.password||'',tags:noteData.tags||['语音']});
-  save();closeModal('voiceModal');renderNotes();toast('语音笔记已保存 ✓');
-}
-
+// ── 拍照 ───────────────────────────────────
 function openPhoto(){
-  document.getElementById('photoPreview').innerHTML='<div class="photo-placeholder">📷 点击下方选择或拍摄图片</div>';
-  document.getElementById('photoAiStatus').style.display='none';
-  document.getElementById('photoResult').style.display='none';
-  document.getElementById('photoSaveBtn').style.display='none';
-  document.getElementById('photoInput').value='';
-  photoBase64='';
-  openModal('photoModal');
+  document.getElementById('photoPreview').innerHTML='📷 点击下方按钮拍照或选图';
+  document.getElementById('photoField').style.display='none';
+  document.getElementById('photoNote').value='';
+  document.getElementById('photoSave').style.display='none';
+  document.getElementById('photoFile').value='';
+  photoB64='';
+  openSheet('photoSheet');
 }
 
 function handlePhoto(input){
   const file=input.files[0];
-  if(!file) return;
+  if(!file)return;
   const reader=new FileReader();
-  reader.onload=async e=>{
-    const b64=e.target.result;
-    photoBase64=b64.split(',')[1];
-    document.getElementById('photoPreview').innerHTML=`<img src="${b64}" alt="照片">`;
-    const aiStatus=document.getElementById('photoAiStatus');
-    const aiText=document.getElementById('photoAiText');
-    aiStatus.style.display='flex';
-    aiText.textContent='AI 正在识别图片内容...';
-    aiText.textContent='图片已加载，请在下方填写内容';
-      document.getElementById('photoResultText').value='';
-      document.getElementById('photoResult').style.display='block';
-      document.getElementById('photoSaveBtn').style.display='block';
-      document.getElementById('photoSaveBtn').dataset.result='';
+  reader.onload=e=>{
+    photoB64=e.target.result;
+    document.getElementById('photoPreview').innerHTML=`<img src="${photoB64}">`;
+    document.getElementById('photoField').style.display='block';
+    document.getElementById('photoSave').style.display='block';
   };
   reader.readAsDataURL(file);
 }
 
-function savePhotoNote(){
-  const raw=document.getElementById('photoSaveBtn').dataset.result;
-  let noteData;
-  if(raw){try{noteData=JSON.parse(raw)}catch(e){}}
-  const body=document.getElementById('photoResultText').value;
-  if(!noteData){noteData={category:'general',title:'照片识别 '+new Date().toLocaleTimeString('zh-CN',{hour:'2-digit',minute:'2-digit'}),body,tags:['照片']};}
-  notes.unshift({id:Date.now(),...noteData,body:body||noteData.body,time:new Date().toLocaleString('zh-CN',{month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'}).replace(/\//g,'-'),account:noteData.account||'',password:noteData.password||'',tags:noteData.tags||['照片']});
-  save();closeModal('photoModal');renderNotes();toast('照片笔记已保存 ✓');
+function savePhoto(){
+  if(!photoB64)return;
+  const note = document.getElementById('photoNote').value.trim();
+  const body = note||'照片记录';
+  const category = classify(body);
+  const {account,password} = extractSecrets(body);
+  notes.unshift({id:Date.now(),title:'照片 '+nowStr(),category,body,time:nowStr(),account,password,photo:photoB64});
+  save(); renderNotes(); closeSheet('photoSheet'); showToast('✓ 照片笔记已保存');
+}
+
+// ── 工具 ───────────────────────────────────
+function openSheet(id){document.getElementById(id).classList.add('open')}
+function closeSheet(id){document.getElementById(id).classList.remove('open')}
+
+function nowStr(){
+  return new Date().toLocaleString('zh-CN',{month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'}).replace(/\//g,'-');
+}
+
+function copyTxt(t){
+  navigator.clipboard.writeText(t).then(()=>showToast('✓ 已复制')).catch(()=>{
+    const ta=document.createElement('textarea');
+    ta.value=t;document.body.appendChild(ta);ta.select();
+    document.execCommand('copy');document.body.removeChild(ta);
+    showToast('✓ 已复制');
+  });
+}
+
+function togglePwd(p){
+  const el=document.getElementById('pwdTxt');
+  el.textContent=el.textContent==='••••••••'?p:'••••••••';
+}
+
+function showToast(msg){
+  const el=document.getElementById('toast');
+  el.textContent=msg;el.classList.add('show');
+  setTimeout(()=>el.classList.remove('show'),1800);
 }
 
 function showStats(){
-  const counts={account:0,finance:0,todo:0,health:0,general:0};
-  notes.forEach(n=>counts[n.category]=(counts[n.category]||0)+1);
-  alert(`📊 笔记统计\n总计 ${notes.length} 条\n🔐 账号密码: ${counts.account} 条\n💰 财务: ${counts.finance} 条\n✅ 待办: ${counts.todo} 条\n❤️ 健康: ${counts.health} 条\n📝 笔记: ${counts.general} 条`);
+  const c={account:0,finance:0,todo:0,health:0,general:0};
+  notes.forEach(n=>c[n.category]=(c[n.category]||0)+1);
+  alert(`📊 笔记统计\n总计 ${notes.length} 条\n🔐 账号: ${c.account}\n💰 财务: ${c.finance}\n✅ 待办: ${c.todo}\n❤️ 健康: ${c.health}\n📝 笔记: ${c.general}`);
 }
 
-document.querySelectorAll('.modal-bg').forEach(bg=>{
-  bg.addEventListener('click',e=>{if(e.target===bg)bg.classList.remove('show');});
+document.querySelectorAll('.sheet-bg').forEach(bg=>{
+  bg.addEventListener('click',e=>{if(e.target===bg)bg.classList.remove('open')});
 });
 
-loadFromCloud();
+// 启动
+if(!notes.length){
+  notes=[
+    {id:1,title:'示例：Gmail账号',category:'account',body:'工作邮箱',time:'06-01 09:00',account:'work@gmail.com',password:'Demo@123'},
+    {id:2,title:'示例：本周待办',category:'todo',body:'完成项目报告\n联系客户',time:'06-01 08:00',account:'',password:''},
+  ];
+  localSave();
+}
+pullCloud();
 </script>
 </body>
 </html>
